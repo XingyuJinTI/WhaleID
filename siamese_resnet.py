@@ -1,10 +1,10 @@
 
 # coding: utf-8
 
-# In[192]:
+# In[12]:
 
 
-#get_ipython().run_line_magic('matplotlib', 'inline')
+get_ipython().run_line_magic('matplotlib', 'inline')
 
 import os
 
@@ -35,7 +35,7 @@ from PIL import Image
 import PIL.ImageOps    
 
 
-# In[193]:
+# In[13]:
 
 
 #!pip install pretrainedmodels > /dev/null 2>&1
@@ -43,7 +43,7 @@ import PIL.ImageOps
 
 # ## Siamese Dataset
 
-# In[194]:
+# In[14]:
 
 
 
@@ -74,20 +74,9 @@ class SiameseDataset(Dataset):
         bbox1 = bbox_df.loc[bbox_df.Image==img1_path,:].values[0,1:]
         img0_pil = Image.open(os.path.join(self.datafolder, img0_path)).crop(bbox0).convert('RGB')
         img1_pil = Image.open(os.path.join(self.datafolder, img1_path)).crop(bbox1).convert('RGB')
-        #img0 = cv2.cvtColor(np.array(img0_pil), cv2.COLOR_BGR2RGB)
         img0 = np.array(img0_pil)
         img1 = np.array(img1_pil)
-        
-#         img0 = cv2.imread(os.path.join(self.datafolder, img0_path))#.crop(bbox0).convert('RGB')
-#         img0 = cv2.cvtColor(img0, cv2.COLOR_BGR2RGB)
-#         img0 = img0[bbox0[0]:bbox0[1], bbox0[2]: bbox0[3]]
-        #img1 = cv2.imread(os.path.join(self.datafolder, img1_path))#.crop(bbox1).convert('RGB')
-#         img1 = cv2.imread(os.path.join(self.datafolder, img1_path))#.crop(bbox0).convert('RGB')
-#         img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
-#         img1 = img1[bbox1[0]:bbox1[1], bbox1[2]: bbox1[3]]
-        
-        #image = self.normalize(self.to_tensor(self.scaler(image))).unsqueeze(0).to(self.device)
-        
+             
         image0 = self.transform(image=img0)['image']
         image1 = self.transform(image=img1)['image']
         #plt.imshow(image0)
@@ -99,7 +88,7 @@ class SiameseDataset(Dataset):
 
 # ## visualize the image pair in order to verify the function working
 
-# In[195]:
+# In[15]:
 
 
 # # not selecting 'new_whale' for anchor image.
@@ -159,69 +148,12 @@ class SiameseDataset(Dataset):
 # plt.show(block=True)
 
 
-# ## EembeddingNet CNN
-
-# In[196]:
-
-
-# class EmbeddingNet(nn.Module):
-#     def __init__(self):
-#         super(EmbeddingNet, self).__init__()
-#         self.convnet = nn.Sequential(nn.Conv2d(3, 32, 5), nn.PReLU(),
-#                                      nn.MaxPool2d(2, stride=2),
-#                                      nn.Conv2d(32, 64, 5), nn.PReLU(),
-#                                      nn.MaxPool2d(2, stride=2))
-
-#         self.fc = nn.Sequential(nn.Linear(64 * 53 * 53, 256), # 64 channels x 
-#                                 nn.PReLU(),
-#                                 nn.Linear(256, 256),
-#                                 nn.PReLU(),
-#                                 nn.Linear(256, 2)
-#                                 )
-
-#     def forward(self, x):
-#         output = self.convnet(x)
-#         output = output.view(output.size()[0], -1)
-#         output = self.fc(output)
-#         return output
-
-#     def get_embedding(self, x):
-#         return self.forward(x)
-
-
 # ## EembeddingNet ResNet50
 
-# In[197]:
-
-
-# resnet_test = models.resnet50(pretrained=True)
-# print(resnet_test)
-
-
-# In[198]:
+# In[16]:
 
 
 class EmbeddingNet(nn.Module):
-#     def __init__(self):
-#         super(EmbeddingNet, self).__init__()
-#         self.convnet = nn.Sequential(nn.Conv2d(3, 32, 5), nn.PReLU(),
-#                                      nn.MaxPool2d(2, stride=2),
-#                                      nn.Conv2d(32, 64, 5), nn.PReLU(),
-#                                      nn.MaxPool2d(2, stride=2))
-
-#         self.fc = nn.Sequential(nn.Linear(64 * 53 * 53, 256), # 64 channels x 
-#                                 nn.PReLU(),
-#                                 nn.Linear(256, 256),
-#                                 nn.PReLU(),
-#                                 nn.Linear(256, 2)
-#                                 )
-
-#     def forward(self, x):
-#         output = self.convnet(x)
-#         output = output.view(output.size()[0], -1)
-#         output = self.fc(output)
-#         return output
-    
     
     def __init__(self):
         super(EmbeddingNet, self).__init__()
@@ -256,18 +188,9 @@ class EmbeddingNet(nn.Module):
         return self.last_layer(x)
 
 
-# In[199]:
-
-
-# from torchsummary import summary
-# device = torch.device("cpu")
-# model_device = EmbeddingNet().to(device)
-# summary(model_device, (3,224,224))
-
-
 # ## Siamese Net
 
-# In[200]:
+# In[17]:
 
 
 class SiameseNet(nn.Module):
@@ -283,7 +206,7 @@ class SiameseNet(nn.Module):
 
 # ## ContrastiveLoss
 
-# In[201]:
+# In[18]:
 
 
 class ContrastiveLoss(nn.Module):
@@ -303,70 +226,25 @@ class ContrastiveLoss(nn.Module):
                         (1 + -1 * target).float() * F.relu(self.margin - (distances + self.eps).sqrt()).pow(2))
         return losses.mean() if size_average else losses.sum()
     
-    
-# class ContrastiveLoss(torch.nn.Module):
-#     """
-#     Contrastive loss function.
-#     Based on: http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf
-#     """
-
-#     def __init__(self, margin=2.0):
-#         super(ContrastiveLoss, self).__init__()
-#         self.margin = margin
-
-#     def forward(self, output1, output2, label):
-#         euclidean_distance = F.pairwise_distance(output1, output2)
-#         loss_contrastive = torch.mean((1-label) * torch.pow(euclidean_distance, 2) +
-#                                       (label) * torch.pow(torch.clamp(self.margin - euclidean_distance, min=0.0), 2))
-
-
-#         return loss_contrastive
 
 
 # ## Data Path and Data Transforms
 
-# In[202]:
+# In[19]:
 
-
-# train_full = pd.read_csv("../input/humpback-whale-identification/train.csv")
-# test_df = pd.read_csv("../input/humpback-whale-identification/sample_submission.csv")
-
-# id_counts = train_full.Id.value_counts()
-
-# valid_df = train_full.loc[train_full.Id.isin(id_counts[id_counts>5].index.values),:].sample(frac=0.3)
-
-# train_df = train_full.loc[~train_full.index.isin(valid_df.index.values),:]
-
-# test_df = pd.read_csv("../input/humpback-whale-identification/sample_submission.csv")
-
-# bbox_df = pd.read_csv("../input/bounding-boxes/bounding_boxes.csv")
 
 train_full = pd.read_csv("train.csv")
 test_df = pd.read_csv("sample_submission.csv")
 
 id_counts = train_full.Id.value_counts()
 
-valid_df = train_full.loc[train_full.Id.isin(id_counts[id_counts>5].index.values),:].sample(frac=0.3)
+valid_df = train_full.loc[train_full.Id.isin(id_counts[id_counts>5].index.values),:].sample(frac=0.1)
 
 train_df = train_full.loc[~train_full.index.isin(valid_df.index.values),:]
 
 test_df = pd.read_csv("sample_submission.csv")
 
 bbox_df = pd.read_csv("bounding_boxes.csv")
-
-# data_transforms = transforms.Compose([
-#     transforms.Resize((224, 224)), 
-#     transforms.ToTensor(),
-#     transforms.Normalize(mean=[0.485, 0.456, 0.406], 
-#                          std=[0.229, 0.224, 0.225])
-# ])
-
-# data_transforms_test = transforms.Compose([
-#     transforms.Resize((224, 224)), 
-#     transforms.ToTensor(),
-#     transforms.Normalize(mean=[0.485, 0.456, 0.406], 
-#                          std=[0.229, 0.224, 0.225])
-# ])
 
 RESIZE_H = 224
 RESIZE_W = 224
@@ -395,19 +273,24 @@ data_transforms_test = albumentations.Compose([
 
 # ## Set up
 
-# In[203]:
+# In[20]:
 
-
-# train_dataset = SiameseDataset(datafolder="../input/humpback-whale-identification/train/", 
-#                                  df=train_df, bbox_df=bbox_df, datatype='train', transform = data_transforms)
 
 train_dataset = SiameseDataset(datafolder="train/", 
                                  df=train_df, bbox_df=bbox_df, datatype='train', transform = data_transforms)
+valid_dataset = SiameseDataset(datafolder="train/", 
+                                 df=valid_df, bbox_df=bbox_df, datatype='train', transform = data_transforms)
 
 train_dataloader = DataLoader(train_dataset,
                         shuffle=True,
                         num_workers=0,
                         batch_size=64)
+
+valid_dataloader = DataLoader(train_dataset,
+                        shuffle=False,
+                        num_workers=0,
+                        batch_size=32)
+
 # embed = EmbeddingNet().cuda()
 # net = SiameseNet(embed).cuda()
 embed = EmbeddingNet()#.cuda()
@@ -420,11 +303,26 @@ loss_history = []
 iteration_number= 0
 
 
-# In[204]:
+# In[21]:
 
 
-net.train()
-for epoch in range(0,50):
+def save_net(net, path):
+    torch.save(net, path)
+    print("Checkpoint saved to {}".format(path))
+
+
+# In[ ]:
+
+
+epoch_num = 3
+loss = 0
+tol_loss = []
+path_best = 'best_net.pth'
+path_cur = 'cur_net.pth'
+
+for epoch in range(0,epoch_num):
+    # train
+    net.train()
     for i, data in enumerate(train_dataloader,0):
         img0, img1 , label = data
 #         img0, img1 , label = img0.cuda(), img1.cuda() , label.cuda()
@@ -439,5 +337,25 @@ for epoch in range(0,50):
             iteration_number +=10
             counter.append(iteration_number)
             loss_history.append(loss_contrastive.item())
-show_plot(counter,loss_history)
+
+
+    # validate
+    net.eval()
+    with torch.no_grad():
+        loss = 0
+        for i, data in enumerate(valid_dataloader):
+            val_img0, val_img1, val_label = data
+            val_output1,val_output2 = net(val_img0, val_img1)
+            val_loss = criterion(val_output1,val_output2,val_label)
+            loss += val_loss.item()
+        
+        print("Epoch number {} \t Val loss {}\n".format(epoch, loss))
+        tol_loss.append(loss)
+        if loss < min(tol_loss):
+            save_net(net, path_best)
+            
+        save_net(net, path_cur)
+        
+# show_plot(counter,loss_history) 
+# show_plot(epoch = 50, tol_loss)
 
