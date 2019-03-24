@@ -2,3 +2,4 @@ sample_submission.csv
 test
 train
 train.csv
+best_net.pth
