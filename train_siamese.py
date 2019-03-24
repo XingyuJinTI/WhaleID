@@ -82,8 +82,8 @@ valid_dataloader = DataLoader(train_dataset,
                         num_workers=0,
                         batch_size=32)
 
-embed = EmbeddingNet().cuda()
-net = SiameseNet(embed).cuda()
+#embed = EmbeddingNet().cuda()
+#net = SiameseNet(embed).cuda()
 embed = EmbeddingNet()
 net = SiameseNet(embed)
 criterion = ContrastiveLoss(margin=0.2)
@@ -107,8 +107,7 @@ for epoch in range(0,epoch_num):
     net.train()
     for i, data in enumerate(train_dataloader,0):
         img0, img1 , label = data
-        img0, img1 , label = img0.cuda(), img1.cuda() , label.cuda()
-        #img0, img1 , label = img0, img1 , label
+        #img0, img1 , label = img0.cuda(), img1.cuda() , label.cuda()
         optimizer.zero_grad()
         output1,output2 = net(img0,img1)
         loss_contrastive = criterion(output1,output2,label)
@@ -127,6 +126,7 @@ for epoch in range(0,epoch_num):
         loss = 0
         for i, data in enumerate(valid_dataloader):
             val_img0, val_img1, val_label = data
+            #val_img0, val_img1, val_label = val_img0.cuda(), val_img1.cuda(), val_label.cuda()
             val_output1,val_output2 = net(val_img0, val_img1)
             val_loss = criterion(val_output1,val_output2,val_label)
             loss += val_loss.item()
@@ -140,18 +140,4 @@ for epoch in range(0,epoch_num):
         torch.save(net, path_cur)
         print("Checkpoint saved to {}".format(path_cur))
         
-# show_plot(counter,loss_history) 
-# show_plot(epoch = 50, tol_loss)
-
-
-# set up for evaluation
-#siamese_net = torch.load("best_net.pth")
-#state_dict = siamese_net.state_dict()
-#embed_net = EmbeddingNet()
-#temp_dict = {}
-#for key in state_dict.keys():
-#    if key.startswith("embedding_net"):
-#        temp_dict[key[14:len(key)]] = state_dict[key]
-#embed_net.load_state_dict(temp_dict)
-#net.eval()
 

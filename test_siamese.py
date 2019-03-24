@@ -7,7 +7,7 @@ Created on Sun Mar 24 18:18:41 2019
 """
 
 import os
-
+import pickle
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
@@ -68,8 +68,12 @@ def getEmbedding(file_path,x):
 # test
 embed_net.eval()
 train_embed_dataset = train_full.assign(embedding = train_full['Image'].apply(lambda x : getEmbedding('train/',x)))
+print('training embedding generated !')
 test_embed_dataset = test_df.assign(embedding = test_df['Image'].apply(lambda x : getEmbedding('test/',x)))
+print('test embedding generated !')
 pickle.dump(train_embed_dataset,open( "train_full_embed.p",'wb'))
+print('training embedding saved ! at train_full_embed.p')
 pickle.dump(test_embed_dataset,open( "test_df_embed.p",'wb'))
+print('test embedding generated ! at train_full_embed.p')
 
 

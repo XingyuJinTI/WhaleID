@@ -5,6 +5,8 @@ Created on Sun Mar 24 18:04:40 2019
 
 @author: xingyu
 """
+import os
+import torch
 from torch.utils.data import DataLoader,Dataset
 import albumentations
 from albumentations import torch as AT
@@ -27,7 +29,7 @@ class SiameseDataset(Dataset):
     def __getitem__(self,idx):
         # not selecting 'new_whale' for anchor image.
         img0_idx = random.choice(self.df[self.df.Id != 'new_whale'].index.values)
-        
+        bbox_df = self.bbox_df
         # we need to make sure approx 50% of images are in the same class
         should_get_same_class = random.randint(0,1)
         if should_get_same_class:
