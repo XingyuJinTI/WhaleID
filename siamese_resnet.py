@@ -1,10 +1,10 @@
 
 # coding: utf-8
 
-# In[12]:
+# In[1]:
 
 
-get_ipython().run_line_magic('matplotlib', 'inline')
+#get_ipython().run_line_magic('matplotlib', 'inline')
 
 import os
 
@@ -35,7 +35,7 @@ from PIL import Image
 import PIL.ImageOps    
 
 
-# In[13]:
+# In[2]:
 
 
 #!pip install pretrainedmodels > /dev/null 2>&1
@@ -43,7 +43,7 @@ import PIL.ImageOps
 
 # ## Siamese Dataset
 
-# In[14]:
+# In[3]:
 
 
 
@@ -88,7 +88,7 @@ class SiameseDataset(Dataset):
 
 # ## visualize the image pair in order to verify the function working
 
-# In[15]:
+# In[4]:
 
 
 # # not selecting 'new_whale' for anchor image.
@@ -150,7 +150,7 @@ class SiameseDataset(Dataset):
 
 # ## EembeddingNet ResNet50
 
-# In[16]:
+# In[5]:
 
 
 class EmbeddingNet(nn.Module):
@@ -190,7 +190,7 @@ class EmbeddingNet(nn.Module):
 
 # ## Siamese Net
 
-# In[17]:
+# In[6]:
 
 
 class SiameseNet(nn.Module):
@@ -206,7 +206,7 @@ class SiameseNet(nn.Module):
 
 # ## ContrastiveLoss
 
-# In[18]:
+# In[7]:
 
 
 class ContrastiveLoss(nn.Module):
@@ -230,7 +230,7 @@ class ContrastiveLoss(nn.Module):
 
 # ## Data Path and Data Transforms
 
-# In[19]:
+# In[8]:
 
 
 train_full = pd.read_csv("train.csv")
@@ -273,7 +273,7 @@ data_transforms_test = albumentations.Compose([
 
 # ## Set up
 
-# In[20]:
+# In[9]:
 
 
 train_dataset = SiameseDataset(datafolder="train/", 
@@ -303,7 +303,7 @@ loss_history = []
 iteration_number= 0
 
 
-# In[21]:
+# In[10]:
 
 
 def save_net(net, path):
@@ -311,7 +311,7 @@ def save_net(net, path):
     print("Checkpoint saved to {}".format(path))
 
 
-# In[ ]:
+# In[12]:
 
 
 epoch_num = 3
@@ -319,6 +319,7 @@ loss = 0
 tol_loss = []
 path_best = 'best_net.pth'
 path_cur = 'cur_net.pth'
+total_num_val = len(valid_df)
 
 for epoch in range(0,epoch_num):
     # train
@@ -350,12 +351,28 @@ for epoch in range(0,epoch_num):
             loss += val_loss.item()
         
         print("Epoch number {} \t Val loss {}\n".format(epoch, loss))
-        tol_loss.append(loss)
-        if loss < min(tol_loss):
+        avg_loss = loss/total_num_val
+        tol_loss.append(avg_loss)
+        if avg_loss < min(tol_loss):
             save_net(net, path_best)
             
         save_net(net, path_cur)
         
 # show_plot(counter,loss_history) 
 # show_plot(epoch = 50, tol_loss)
+
+
+# In[13]:
+
+
+# set up for evaluation
+siamese_net = torch.load("best_net.pth")
+state_dict = siamese_net.state_dict()
+embed_net = EmbeddingNet()
+temp_dict = {}
+for key in state_dict.keys():
+    if key.startswith("embedding_net"):
+        temp_dict[key[14:len(key)]] = state_dict[key]
+embed_net.load_state_dict(temp_dict)
+net.eval()
 
