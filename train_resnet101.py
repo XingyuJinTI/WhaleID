@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
-
-
 import numpy as np 
 import pandas as pd 
 import os
@@ -36,34 +33,17 @@ from collections import OrderedDict
 import cv2
 
 
-# In[2]:
-
-
 import albumentations
 from albumentations import torch as AT
 import pretrainedmodels
 
-
-# In[3]:
 
 
 train_df = pd.read_csv("train.csv")
 
 
 # # Preparing data for Pytorch
-
 # Data for Pytorch needs to be prepared:
-# 
-# we need to define transformations;
-# then we need to initialize a dataset class;
-# then we need to create dataloaders which will be used by the model;
-
-# Transformations
-# Basic transformations include only resizing the image to the necessary size, converting to Pytorch tensor and normalizing
-
-# In[10]:
-
-
 def prepare_labels(y):
     # Label should be encoded to one-hot
     values = np.array(y)
@@ -78,19 +58,7 @@ def prepare_labels(y):
     return y, label_encoder
 
 
-# In[11]:
-
-
 y, le = prepare_labels(train_df['Id'])
-
-
-# In[12]:
-
-
-y, le
-
-
-# In[13]:
 
 
 class WhaleDataset(Dataset):
@@ -128,9 +96,6 @@ class WhaleDataset(Dataset):
             return image, label, self.image_files_list[idx]
 
 
-# In[14]:
-
-
 data_transforms = albumentations.Compose([
     albumentations.Resize(160, 320),    
     albumentations.HorizontalFlip(),
@@ -158,10 +123,7 @@ num_workers = 2
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, sampler=train_sampler, num_workers=num_workers)
 test_loader = torch.utils.data.DataLoader(test_set, batch_size=10, num_workers=num_workers)
 
-
-# In[15]:
-
-
+# get pretrained resnet
 model_conv = pretrainedmodels.resnext101_64x4d()
 for param in model_conv.parameters():
     param.requires_grad = False
@@ -170,19 +132,12 @@ model_conv.avg_pool = nn.AvgPool2d((5,10))
 model_conv.last_linear = nn.Linear(model_conv.last_linear.in_features, 5005)
 
 
-# In[17]:
-
-
 criterion = nn.BCEWithLogitsLoss()
-
 optimizer = optim.Adam(model_conv.parameters(), lr=0.01)
 exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
 
 
-# In[ ]:
-
-
-n_epochs = 4
+n_epochs = 20
 for epoch in range(1, n_epochs+1):
     print(time.ctime(), 'Epoch:', epoch)
 
@@ -205,7 +160,6 @@ for epoch in range(1, n_epochs+1):
     exp_lr_scheduler.step()
 
 
-# In[ ]:
 
 
 sub = pd.read_csv('sample_submission.csv')
@@ -219,9 +173,6 @@ for (data, target, name) in test_loader:
         sub.loc[sub['Image'] == n, 'Id'] = ' '.join(le.inverse_transform(e.argsort()[-5:][::-1]))
         
 sub.to_csv('submission.csv', index=False)
-
-
-# In[ ]:
 
 
 
