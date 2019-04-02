@@ -38,7 +38,7 @@ class EmbeddingNet(nn.Module):
 
         self.model.apply(set_bn_fix)
         
-        resnet.fc = nn.Linear(2048, 5004, bias=True)
+        resnet.fc = nn.Linear(2048, 512, bias=True)
         self.last_layer = resnet.fc
         
 
